@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en-us" ng-app="emu">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Bitcamp Emulator</title>
+    <script src="multiplayer.js"></script>
+    <script src="http://cdn.peerjs.com/0.3/peer.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.0.min.js"></script>
+    <script src="js/uikit.min.js"></script>
+    <script src="js/uikit-icons.min.js"></script>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="css/uikit.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular-animate.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.16/angular-sanitize.js"></script>
+    <script src="controller.js"></script>
+</head>
+
+<body ng-controller="emuctrl as emu">
+    <div class="uk-position-relative hero">
+        <img src="images/world-map-5.jpg" alt="" class="background">
+        <div class="uk-position-top">
+            <div class="uk-container" id="title-container">
+                <h1 class="uk-heading-hero uk-text-center uk-animation-slide-top-medium" id="title">Bitcamp Emulator</h1>
+                <h5 class="uk-text-center uk-animation-slide-bottom-medium" id="authors">By: Nibble</h5>
+            </div>
+            <!--button class="uk-button uk-button-large uk-button-default uk-align-center" id="learn-more">Upload ROM</button-->
+        </div>
+    </div>
+    <div ng-hide="lobbies == undefined || inlobby" id="romUploaded" class="uk-text-center uk-animation-fade">
+        <h5>Your ROM Has Been Uploaded</h5>
+    </div>
+    <div id="body">
+        <div class="uk-container uk-text-center" id="results" ng-hide="!uploadedROM || inGame">
+            <div class="uk-child-width-1-2@m uk-flex-center" uk-grid uk-scrollspy="cls: uk-animation-fade; target: > div > .uk-card; delay: 500; repeat: false">
+                <div ng-repeat="game in filteredGames">
+                    <div class="uk-card uk-card-default uk-card-body">
+                        <img class="uk-align-center thumbnail" style="padding-top: 3px;" src="{{game.image}}" alt="">
+                        <h3 class="uk-card-title uk-text-center" id="game-heading">{{game.name}}</h3>
+                        <div uk-margin class=" button-container uk-column-flex-center">
+                            <p class="uk-first-column uk-flex-center uk-margin-small-top">
+                                <button class="uk-button uk-button-secondary" type="button" ng-click="single()" ng-hide="inlobby">Play Single Player</button>
+                            </p>
+                            <p class="uk-first-column uk-flex-center">
+                                <button class="uk-button uk-button-default" ng-click="createLobby()" ng-hide="inlobby">Create Lobby</button>
+                            </p>
+                            <p class="uk-first-column uk-flex-center uk-margin-small-top">
+                                <button class="uk-button uk-button-primary" type="button" ng-hide="lobbies === undefined || lobbies.length === 0">Join Lobby</button>
+                            </p>
+
+                            <div uk-dropdown="pos: bottom-justify; offset: 20" ng-hide="lobbies === undefined || lobbies.length === 0">
+                                <ul class="uk-nav uk-dropdown-nav">
+                                    <li ng-repeat="lobby in lobbies">
+                                        <a ng-click="join(lobby.id)">{{lobby.name}}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div uk-card id="createLobby" class="uk-container uk-card uk-card-default uk-animation-slide-bottom" ng-class="{'uk-animation-reverse': !isCreatingLobby}"
+        ng-hide="!isCreatingLobby">
+        <form>
+            <fieldset class="uk-fieldset">
+
+                <legend class="uk-legend">Create Lobby</legend>
+
+                <div class="uk-margin">
+                    <input class="uk-input" type="text" placeholder="Enter Your Lobby Name" ng-model="name">
+                    <br>
+                    <br>
+                    <button class="uk-button uk-button-default" ng-click="generateLobby(name)">Create</button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <script>
+        $("#learn-more").click(function () {
+            $('html, body').animate({
+                scrollTop: $("#body").offset().top
+            }, 750);
+        });
+    </script>
+    <div class="uk-card uk-card-default uk-card-body uk-text-center" id="lost" ng-if="lost">
+        You lost.
+    </div>
+    <div class="uk-card uk-card-default uk-card-body uk-text-center" id="won" ng-if="won">
+        You won!
+    </div>
+    <div id="canvases" class="uk-container" hidden>
+        <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+        <canvas class="emscripten" id="overlay" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+    <div class="uk-container" id="add-rom">
+        <h1 ng-hide="inlobby || uploadedROM" class="uk-animation-slide-left">Add Your ROM</h1>
+        <div class="test-upload uk-placeholder uk-text-center uk-animation-fade" ng-hide="inlobby || uploadedROM" id="rom-getter">
+            <span uk-icon="icon: cloud-upload"></span>
+            <span class="uk-text-middle">Attach ROM by dropping it here or</span>
+            <div uk-form-custom>
+                <input type="file" single id="file-selector">
+                <a class="uk-link" id="select-file">selecting one</a>
+            </div>
+        </div>
+        <div id="waiting" ng-hide="!createdLobby || inGame" class="uk-animation-fade uk-text-center">
+            Waiting for an Opponent to Join Lobby: {{createdLobbyName}}
+        </div>
+        <div class="uk-text-center" id="to-top">
+            <a href="#" uk-totop uk-scroll></a>
+        </div>
+        <script>
+            function sha256(buffer) {
+
+                // We transform the string into an arraybuffer.
+                return crypto.subtle.digest("SHA-256", buffer).then(function (hash) {
+                    scope.uploadedROM = true;
+                    scope.filteredGames = scope.games.filter(function (el) {
+                        return el['sha256'] === hex(hash);
+                    });
+                    console.log(scope.filteredGames);
+                    return hex(hash);
+                });
+            }
+
+            function hex(buffer) {
+                var hexCodes = [];
+                var view = new DataView(buffer);
+                for (var i = 0; i < view.byteLength; i += 4) {
+                    // Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
+                    var value = view.getUint32(i)
+                    // toString(16) will give the hex representation of the number without padding
+                    var stringValue = value.toString(16)
+                    // We use concatenation and slice for padding
+                    var padding = '00000000'
+                    var paddedValue = (padding + stringValue).slice(-padding.length)
+                    hexCodes.push(paddedValue);
+                }
+
+                // Join all the hex strings into one
+                return hexCodes.join("");
+            }
+
+            Window.peer = new Peer({
+                key: 'foj3c8745dmcmcxr'
+            });
+            Window.peer.on('open', function (id) {
+                Window.pid = id;
+                document.getElementById("file-selector").disabled = false;
+            });
+            initPeerStuff();
+            document.getElementById("overlay").width = 256;
+            document.getElementById("overlay").height = 224;
+            document.getElementById("canvas").width = 256;
+            document.getElementById("canvas").height = 224;
+            window.Module = {
+                preRun: [],
+                postRun: [],
+                print: function (text) {},
+                canvas: document.getElementById("canvas"),
+                setStatus: function (text) {
+                    if (!Module.setStatus.last) Module.setStatus.last = {
+                        time: Date.now(),
+                        text: ''
+                    };
+                    if (text === Module.setStatus.text) return;
+                    var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                    var now = Date.now();
+                    if (m && now - Date.now() < 30) return; // if this is a progress update, skip if too soon
+                    if (m) {
+                        text = m[1];
+                    } else {}
+                },
+                totalDependencies: 0,
+                monitorRunDependencies: function (left) {
+                    this.totalDependencies = Math.max(this.totalDependencies, left);
+                    Module.setStatus(left ?
+                        'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies +
+                        ')' :
+                        'All downloads complete.'
+                    );
+                }
+            };
+
+            Module.setStatus('Downloading...');
+            window.onerror = function () {
+                Module.setStatus('Exception thrown, see JavaScript console');
+                Module.setStatus = function (text) {
+                    if (text) Module.printErr('[post-exception status] ' + text);
+                };
+            };
+
+            // Wires up the event handlers, called from compiled c code to give file
+            // system a chance to sync.
+            window.initSNES = function () {
+                var fileChooser = document.getElementById('file-selector');
+                var cout_print = Module.print;
+                var filename = "";
+
+                var goFullScreen = function () {
+                    var pointerlock = document.getElementById('pointer-lock').checked;
+                    var resize = document.getElementById('resize').checked;
+                    // double-checked, this does expect js boolean values
+                    Module.requestFullScreen(pointerlock, resize);
+                };
+
+                var snesReadFile = function (evt) {
+                    var f = evt.currentTarget.files[0];
+                    cout_print(f.name);
+                    filename = f.name;
+                    var reader = new FileReader();
+                    reader.onprogress = function (e) {
+                        if (e.lengthComputable) {
+                            cout_print(Math.round((e.loaded / e.total) * 100) + "%");
+                        } else {
+                            count_print(e.loaded + "bytes");
+                        }
+                    };
+                    reader.onload = function (e) {
+                        cout_print(f.name + " loaded");
+                        Module.FS_createDataFile("/", f.name, new Uint8Array(this.result), true, true);
+                        sha256(this.result).then(function (hash) {
+                            Window.hash = hash;
+                            console.log(hash);
+                            $.get("http://localhost:3000/get?hash=" + hash, function (data) {
+                                scope.lobbies = data;
+                                scope.$apply();
+                            });
+                        })
+                    };
+                    reader.readAsArrayBuffer(f);
+
+                };
+
+                Window.snesMain = (function () {
+                    var interval = null;
+                    var run = Module.cwrap('run', null, ['string']);
+                    return function () {
+                        clearInterval(interval);
+                        interval = setInterval(Module._S9xAutoSaveSRAM, 10000);
+                        // reboot_romnum = -1; // seems unnecessary?
+                        run(filename);
+                    };
+                })();
+
+                Window.startEmu = function () {
+                    document.getElementById("canvases").hidden = false;
+                    resizeCanvas();
+                    $('html, body').animate({
+                        scrollTop: $("#canvas").offset().top
+                    }, 750);
+                    Window.snesMain();
+                };
+
+                fileChooser.addEventListener('change', snesReadFile);
+                // make sure we sync state before tab closes
+                window.addEventListener('beforeunload', Module._S9xAutoSaveSRAM);
+            };
+        </script>
+        <script>
+            (function () {
+                var memoryInitializer = 'snes9x.html.mem';
+                if (typeof Module['locateFile'] === 'function') {
+                    memoryInitializer = Module['locateFile'](memoryInitializer);
+                } else if (Module['memoryInitializerPrefixURL']) {
+                    memoryInitializer = Module['memoryInitializerPrefixURL'] + memoryInitializer;
+                }
+                var xhr = Module['memoryInitializerRequest'] = new XMLHttpRequest();
+                xhr.open('GET', memoryInitializer, true);
+                xhr.responseType = 'arraybuffer';
+                xhr.send(null);
+            })();
+
+            var script = document.createElement('script');
+            script.src = "snes9x.js";
+            document.body.appendChild(script);
+        </script>
+    </div>
+</body>
+
+</html>

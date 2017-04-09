@@ -1,0 +1,166 @@
+.uk-navbar-nav>li>a {
+    color: white;
+}
+
+.background {
+    filter: brightness(0.6);
+    opacity: 0.9;
+    box-shadow: 3px 1px 0px 1px rgba(0, 0, 0, 0.2)
+}
+
+#title-container {
+    padding-top: 10%;
+}
+
+#title {
+    color: lightgrey;
+}
+
+#authors {
+    font-size: 1.7rem;
+    color: white;
+}
+
+.hero {
+    margin-bottom: 3%;
+}
+
+.thumbnail {
+    border-radius: 1%;
+}
+
+#learn-more {
+    margin-top: 5%;
+    color: white;
+}
+
+#romUploaded {
+    margin-bottom: 5%;
+}
+
+#learn-more:hover {
+    background-color: white;
+    color: black;
+    -webkit-animation: ease-in 2s;
+    /* Safari, Chrome and Opera > 12.1 */
+    -moz-animation: ease-in 2s;
+    /* Firefox < 16 */
+    -ms-animation: ease-in 2s;
+    /* Internet Explorer */
+    -o-animation: ease-in 2s;
+    /* Opera < 12.1 */
+    animation: ease-in 2s;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.uk-animation-fade.ng-hide {
+    opacity: 0;
+}
+
+.uk-animation-fade.ng-hide-remove {
+    transition: all linear 1000ms;
+}
+
+.uk-animation-fade.ng-hide-add {
+    transition: all linear 500ms;
+}
+
+#to-top {
+    font-size: 1.3rem;
+    padding-top: 5%;
+}
+
+.button-container>.uk-first-column:nth-child(1)>.uk-button {
+    padding: 0 13%;
+}
+
+.button-container>p:nth-child(2)>.uk-button {
+    padding: 0 20%;
+}
+
+#results {
+    padding-bottom: 5%;
+}
+
+#game-heading {
+    padding-bottom: 5%;
+}
+
+#select-file:hover {
+    text-decoration: underline;
+}
+
+.emscripten {
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+textarea.emscripten {
+    font-family: monospace;
+    width: 80%;
+}
+
+div.emscripten {
+    text-align: center;
+}
+
+div.emscripten_border {
+    border: 1px solid black;
+}
+
+#add-rom {
+    margin-bottom: 5%;
+}
+
+
+/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+
+canvas.emscripten {
+    border: 0px none;
+}
+
+#canvases {
+    max-width: 60%;
+    position: relative;
+    min-width: 256px;
+    min-height: 224px;
+}
+
+#createLobby {
+    max-width: 50%;
+    padding: 3%;
+}
+
+#canvas {
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    position:absolute;
+    top: 0;
+}
+
+#overlay {
+    z-index: 10;
+    position:absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+}
+
+#lost{
+    font-size: larger;
+}
+
+#won{
+    font-size: larger;
+}
