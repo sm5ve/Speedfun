@@ -5,10 +5,12 @@ var emuctrl = angular.module('emu', ['ngAnimate', 'ngSanitize']);
 var scope;
 
 var goal = 41;
+
+var ip = "http://172.16.130.56";
 var alreadyWon = false;
 
-function resizeCanvas() {
-    $(function () {
+function resizeCanvas(){
+    $(function() {
         var div = $('#canvases');
         var width = div.width();
 
@@ -26,6 +28,8 @@ emuctrl.controller('emuctrl', function ($scope) {
     scope = $scope;
     $scope.lost = false;
     $scope.won = false;
+    $scope.timer = false;
+    $scope.startTime = 0;
     $scope.games = [{
             'name': 'Super Mario World',
             'image': 'images/Super Mario World (U).png',
@@ -62,7 +66,7 @@ emuctrl.controller('emuctrl', function ($scope) {
         $scope.createdLobbyName = name;
         $scope.createdLobby = true;
         $scope.$apply();
-        $.get("http://172.16.130.56/create?hash=" + Window.hash + "&id=" + Window.pid + "&name=" + name, function (data) {
+        $.get(ip + ":3000/create?hash=" + Window.hash + "&id=" + Window.pid + "&name=" + name, function (data) {
 
         });
     }
@@ -72,7 +76,7 @@ emuctrl.controller('emuctrl', function ($scope) {
         $scope.inlobby = true;
 
         $scope.$apply();
-        $.get("http://172.16.130.56/destroy?id=" + id, function (data) {});
+        $.get(ip + ":3000/destroy?id=" + id, function (data) {});
     }
 
     $scope.single = function () {
@@ -92,9 +96,9 @@ function initConn() {
                 Window.lastPartnerPacket = data;
             }
             if (data.type == "win") {
-                if (data.level == goal && !alreadyWon) {
+                if(data.level == goal && !alreadyWon){
                     scope.lost = true;
-                    if (!scope.$$phase) {
+                    if(!scope.$$phase) {
                         scope.$apply();
                     }
                 }

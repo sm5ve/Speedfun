@@ -10,6 +10,18 @@ marioSheetFlipped.src = "MarioPosesFlipped.png";
 
 var wonLevel = false;
 
+var linkSprites = [
+    new Image(),
+    new Image(),
+    new Image(),
+    new Image()
+];
+
+linkSprites[0].src = "link_backward.png";
+linkSprites[1].src = "link_forward.png";
+linkSprites[2].src = "link_left.png";
+linkSprites[3].src = "link_right.png";
+
 function updateFrame(){
     if(!over_ctx){
         over_canvas = document.getElementById("overlay");
@@ -119,11 +131,10 @@ function updateFrame(){
                 //console.log("(" + (linkx - screenx) + ", " + (linky - screeny) + ")");
 
                 if(Window.lastPartnerPacket != undefined){
-                    over_ctx.fillStyle="#FF0000";
                     //var x = ()
                     var partX = Window.lastPartnerPacket.x - screenx;
                     var partY = Window.lastPartnerPacket.y - screeny;
-                    over_ctx.fillRect(partX,partY,16,16);
+                    over_ctx.drawImage(linkSprites[Window.lastPartnerPacket.anim / 2], 0, 0, 32, 32, partX - 8, partY - 8, 32, 32);
                 }
             }
         }

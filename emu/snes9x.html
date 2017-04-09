@@ -24,8 +24,7 @@
         <img src="images/world-map-5.jpg" alt="" class="background">
         <div class="uk-position-top">
             <div class="uk-container" id="title-container">
-                <h1 class="uk-heading-hero uk-text-center uk-animation-slide-top-medium" id="title">Bitcamp Emulator</h1>
-                <h5 class="uk-text-center uk-animation-slide-bottom-medium" id="authors">By: Nibble</h5>
+                <h1 class="uk-heading-hero uk-text-center uk-animation-slide-top-medium" id="title">Speedfun</h1>
             </div>
             <!--button class="uk-button uk-button-large uk-button-default uk-align-center" id="learn-more">Upload ROM</button-->
         </div>
@@ -88,6 +87,9 @@
             }, 750);
         });
     </script>
+    <div class="uk-card uk-card-default uk-card-body uk-text-center" id="timer" ng-if="timer">
+        {{"Time: " + t}}
+    </div>
     <div class="uk-card uk-card-default uk-card-body uk-text-center" id="lost" ng-if="lost">
         You lost.
     </div>
@@ -126,6 +128,17 @@
                     console.log(scope.filteredGames);
                     return hex(hash);
                 });
+            }
+
+            function updateTimer(){
+                scope.now = Date.now();
+                scope.t = (parseFloat((scope.now - scope.startTime) / 1000).toFixed(3));
+                if(!scope.$$phase) {
+                    scope.$apply();
+                }
+                if(!(scope.won || scope.lost)){
+                    setTimeout(updateTimer, 10);
+                }
             }
 
             function hex(buffer) {
@@ -227,7 +240,7 @@
                         sha256(this.result).then(function (hash) {
                             Window.hash = hash;
                             console.log(hash);
-                            $.get("http://172.16.130.56/get?hash=" + hash, function (data) {
+                            $.get(ip + ":3000/get?hash=" + hash, function (data) {
                                 scope.lobbies = data;
                                 scope.$apply();
                             });
@@ -251,10 +264,15 @@
                 Window.startEmu = function () {
                     document.getElementById("canvases").hidden = false;
                     resizeCanvas();
+                    scope.startTime = Date.now();
+                    scope.timer = true;
+                    scope.now = Date.now();
+                    updateTimer();
                     $('html, body').animate({
                         scrollTop: $("#canvas").offset().top
                     }, 750);
                     Window.snesMain();
+
                 };
 
                 fileChooser.addEventListener('change', snesReadFile);
