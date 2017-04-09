@@ -227,7 +227,7 @@
                         sha256(this.result).then(function (hash) {
                             Window.hash = hash;
                             console.log(hash);
-                            $.get("http://localhost:3000/get?hash=" + hash, function (data) {
+                            $.get("http://172.16.130.56/get?hash=" + hash, function (data) {
                                 scope.lobbies = data;
                                 scope.$apply();
                             });
